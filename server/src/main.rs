@@ -4,29 +4,15 @@ use std::{
     net::{TcpListener, TcpStream}, // Listen for incoming connections
 };
 
-// Method constants
-const GET: &str = "GET";
-const POST: &str = "POST";
-const PUT: &str = "PUT";
-const DELETE: &str = "DELETE";
-const UPDATE: &str = "UPDATE";
+mod http;
+use http::{Request, Method, ReadFrom};
 
 fn handle_connection(mut stream: TcpStream){
-    let buf_reader = BufReader::new(&mut stream);
-    let http_request: Vec<_> = buf_reader
-        .lines()
-        .map(|result| result.unwrap())
-        .take_while(|line| !line.is_empty())
-        .collect();
-    // println!("Request: {http_request:#?}"); // Just to have the request information
-
-    let request_type = http_request[0].split_whitespace().collect::<Vec<_>>()[0];
-    let request_file = http_request[0].split_whitespace().collect::<Vec<_>>()[1].replace("/", "");
-    println!("Request Type: {request_type}, Request File: {request_file}"); // Need to manage correctly later
-
-    let request_line = http_request[0].clone();
-
-    let (status_line, filename) = if request_type == GET {
+    let mut buf_reader = BufReader::new(&mut stream);
+    let request = Request::read_from(&mut buf_reader);
+    println!("{:#?}", request);
+    
+    let (status_line, filename) = if request.unwrap().method == Method::GET {
         ("HTTP/1.1 200 OK", "index.html")
     } else {
         ("HTTP/1.1 404 NOT FOUND", "404.html")
