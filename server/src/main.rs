@@ -5,12 +5,11 @@ use std::{
 };
 
 mod http;
-use http::{Request, Method, ReadFrom};
+use http::{Request, Method, Response, ReadFrom, WriteTo};
 
 fn handle_connection(mut stream: TcpStream){
     let mut buf_reader = BufReader::new(&mut stream);
     let request = Request::read_from(&mut buf_reader);
-    println!("{:#?}", request);
     
     let (status_line, filename) = if request.unwrap().method == Method::GET {
         ("HTTP/1.1 200 OK", "index.html")
@@ -21,10 +20,13 @@ fn handle_connection(mut stream: TcpStream){
     let contents = fs::read_to_string(filename).unwrap();
     let length = contents.len();
 
-    let response =
-        format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
+    let response = Response::ok(&contents);
 
-    stream.write_all(response.as_bytes()).unwrap();
+    // Send response
+    match response.write_to(&mut stream){
+        Ok(_) => println!("Response sent"),
+        Err(e) => eprintln!("Failed sending response: {}", e)
+    }
 }
 
 fn main() {
