@@ -1,5 +1,9 @@
 # Servidor HTTP en RUST
-Este proyecto implementa un servidor HTTP básico en Rust. A continuación se describe el proceso general y las estructuras involucradas.
+Este proyecto implementa un servidor HTTP básico en Rust. A continuación se describe el proceso general y las estructuras involucradas. Se utilizaron como guía los siguientes recursos:
+- [Rust Fundamentals](https://www.udemy.com/course/rust-fundamentals/)
+- [The Rust Programming Language](https://doc.rust-lang.org/beta/book/ch20-02-multithreaded.html)
+- [http-server-from-scratch](https://github.com/giuliano-macedo/http-server-from-scratch-rs/tree/master)
+
 ## Estructura del Proyecto
 El proyecto esté organizado por módulos, utilizando las siguientes estructuras y traits:
 - **main.rs:** Archivo principal que inicializa y ejecuta el servidor.
