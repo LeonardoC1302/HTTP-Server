@@ -1,40 +1,59 @@
-use std::{
-    fs, // Standard library’s filesystem module
-    io::{prelude::*, BufReader}, // Read from and write to the stream
-    net::{TcpListener, TcpStream}, // Listen for incoming connections
-};
-
+// Dependencias
 mod http;
-use http::{Request, Method, Response, ReadFrom, WriteTo};
-
-fn handle_connection(mut stream: TcpStream){
-    let mut buf_reader = BufReader::new(&mut stream);
-    let request = Request::read_from(&mut buf_reader);
-    
-    let (status_line, filename) = if request.unwrap().method == Method::GET {
-        ("HTTP/1.1 200 OK", "index.html")
-    } else {
-        ("HTTP/1.1 404 NOT FOUND", "404.html")
-    };
-
-    let contents = fs::read_to_string(filename).unwrap();
-    let length = contents.len();
-
-    let response = Response::ok(&contents);
-
-    // Send response
-    match response.write_to(&mut stream){
-        Ok(_) => println!("Response sent"),
-        Err(e) => eprintln!("Failed sending response: {}", e)
-    }
-}
+use http::{parse_url_param, Method, Response, Server};
+use std::env;
 
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
-
-    for stream in listener.incoming() {
-        let stream = stream.unwrap();
-
-        handle_connection(stream)
+    // Obtenemos los arguentos de la línea de comandos
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 3 {
+        panic!("[USAGE] {} <PORT> <THREAD_QTY>", args[0]);
     }
+    let thread_qty:usize = args[2].parse().unwrap();
+    
+    let mut server = Server::new("127.0.0.1", &args[1]);
+    server.on_file(r"/index.html", "./static/index.html");
+    server.on(r"/", |_| Response::redirect("/index.html"));
+
+    // Simulamos una página de login
+    server.on(r"/login", |req| {
+        // Solo aceptamos solicitudes GET y POST
+        if req.method != Method::GET && req.method != Method::POST {
+            return Response::internal_err("Only get or post requests are allowed");
+        }
+    
+        // Parsear los parámetros de la URL (para GET)
+        let mut query = match req.path.parse_params() {
+            Ok(q) => q,
+            Err(_) => return Response::internal_err("Couldn't parse query parameters"),
+        };
+    
+        // Parsear los parámetros del cuerpo de la solicitud (para POST)
+        let body = match parse_url_param(&req.body) {
+            Ok(b) => b,
+            Err(_) => return Response::internal_err("Couldn't parse body parameters"),
+        };
+    
+        // Mezclar los parámetros de la URL y del cuerpo
+        query.extend(body);
+    
+        // Obtener el valor del campo 'email'
+        let email = match query.get("email") {
+            Some(v) => v,
+            None => return Response::internal_err("Missing email"),
+        };
+    
+        // Obtener el valor del campo 'password'
+        let password = match query.get("password") {
+            Some(v) => v,
+            None => return Response::internal_err("Missing password"),
+        };
+    
+        // Crear una respuesta con los valores de email y password
+        let response = format!("Email: {}, Password: {}\n", email, password);
+        Response::ok(&response)
+    });    
+
+
+    server.run(thread_qty)
 }

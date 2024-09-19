@@ -1,53 +1,53 @@
+use std::convert::TryFrom;
 use std::io::BufRead;
+use super::{Headers, Method, Path, ReadFrom};
 
-// use crate::method::Method;
-// use crate::path::Path;
-// use crate::read_from::ReadFrom;
-use super::{Method, Path, Headers, ReadFrom};
-
-#[derive(Debug)]
+/// Solicitud HTTP
 pub struct Request {
     pub method: Method,
     pub path: Path,
-    pub headers : Headers,
-    pub body: String
+    pub headers: Headers,
+    pub body: String,
 }
 
-// Create request from vector
 impl ReadFrom for Request {
     type Error = &'static str;
+
     fn read_from<R: BufRead>(stream: &mut R) -> Result<Self, Self::Error> {
+        // Buffer para almacenar la solicitud entrante
         let mut buff: [u8; 4000] = [0; 4000];
-        let l = stream.read(&mut buff).or(Err("failed receiving request"))?;
+        
+        // Lee la solicitud en el buffer
+        let l = stream.read(&mut buff).or(Err("Could not receive request"))?;
+        
+        // Convierte el buffer a string
         let buff_str = String::from_utf8_lossy(&buff[0..l]);
         let mut buff_str_splitted = buff_str.split('\n');
 
-        let first_line = match buff_str_splitted.next() {
-            Some(line) => line,
-            None => return Err("Empty request")
-        };
+        // Analiza la primera línea (línea de solicitud)
+        let first_line = buff_str_splitted.next()
+            .ok_or("There is no first line in the request")?;
 
-        let mut first_line_splitted = first_line.split_whitespace();
+        let mut first_line_splitted = first_line.split(' ');
 
-        let method = Method::from(match first_line_splitted.next(){
-            Some(method) => method,
-            None => return Err("Empty request")
-        });
+        // Extrae el método y la ruta de la primera línea
+        let method = Method::from(first_line_splitted.next()
+            .ok_or("First line has no spaces")?);
+        let path = Path::from(first_line_splitted.next()
+            .ok_or("First line doesn't have a path")?);
 
-        let path = match first_line_splitted.next(){
-            Some(path) => Path::new(path.to_string()),
-            None => return Err("Empty request")
-        };
+        // Analiza los encabezados
+        let headers = Headers::try_from(&mut buff_str_splitted)
+            .or(Err("Failed parsing headers"))?;
 
-        let headers = Headers::try_from(&mut buff_str_splitted).or(Err("Failed parsing headers"))?;
-
+        // Recolecta las líneas restantes como cuerpo
         let body = buff_str_splitted.collect::<Vec<&str>>().join("\n");
 
         Ok(Self {
             method,
             path,
             headers,
-            body
+            body,
         })
     }
 }
