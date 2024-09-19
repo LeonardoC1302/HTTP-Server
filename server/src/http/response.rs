@@ -56,7 +56,7 @@ impl Response {
         };
         let mut body = Vec::<u8>::new();
         if f.read_to_end(&mut body).is_err() {
-            return Self::internal_err("Couldn't read file");
+            return Self::internal_err("Could not read file");
         }
         Self {
             status: StatusCode::OK,
