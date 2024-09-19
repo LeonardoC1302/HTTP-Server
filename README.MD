@@ -24,7 +24,7 @@ Primeramente se obtienen los argumentos de la línea de comandos para el puerto 
 ```bash
 cargo r <port> <thread_qty>
 ```
-A partir de estos parámetros, se crea una instancia de Server en la dirección 127.0.0.1 y el puerto proporcionado.
+A partir de estos parámetros, se crea una instancia de Server en la dirección 127.0.0.1 y el puerto proporcionado. NOTA: este comando se debe ejecutar desde la carpeta *server*. Lo ideal sería correrlo en el puerto 7878 con bastantes hilos.
 
 En el archivo *main.rs* se configuran las rutas para manejar las solicitudes:
 - /index.html sirve un archivo estático.
