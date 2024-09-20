@@ -54,6 +54,32 @@ fn main() {
         Response::ok(&response)
     });    
 
+    server.on(r"/tests", |req| {
+        // Parsear los parámetros de la URL
+        let mut query = match req.path.parse_params() {
+            Ok(q) => q,
+            Err(_) => return Response::internal_err("Couldn't parse query parameters"),
+        };
+    
+        // Parsear los parámetros del cuerpo de la solicitud
+        let body = match parse_url_param(&req.body) {
+            Ok(b) => b,
+            Err(_) => return Response::internal_err("Couldn't parse body parameters"),
+        };
+    
+        // Mezclar los parámetros de la URL y del cuerpo
+        query.extend(body);
+    
+        // Crear una respuesta con el método y los parámetros
+        let mut response = format!("Method: {:?}\n", req.method);
+        for (key, value) in query {
+            response.push_str(&format!("{}: {}\n", key, value));
+        }
+    
+        // Devolver la respuesta
+        Response::ok(&response)
+    });
+
 
     server.run(thread_qty)
 }

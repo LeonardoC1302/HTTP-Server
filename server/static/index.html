@@ -1,12 +1,131 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTTP Server</title>
+    <title>Sistema de Gestión de Tareas</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+        h1 { color: #333; }
+        h2 { text-align: center; margin: 10px 0;}
+        form { margin-bottom: 20px; display: flex; flex-direction: column; width: 100%;}
+        input[type="text"], input[type="number"] { width: 200px; padding: 5px; flex-grow: 1;}
+        button { padding: 6px 10px; background-color: #305cde; color: white; border: none; cursor: pointer; border-radius: 5px; text-transform: uppercase; font-weight: bold;}
+        button:hover { background-color: #2151df; }
+        /* #response { background-color: #f1f1f1; padding: 10px; border-radius: 5px; } */
+        .title { text-align: center; color: #2151df;}
+        .container { display: flex; justify-content: space-between; padding: 20px;}
+        .inputs{ display: flex; justify-content: space-between; margin-bottom: 10px; width: 100%; gap: 10px;}
+        .response__box { max-height: 200px; overflow-y: auto; background-color: #becdfa; padding: 10px; border-radius: 5px; border: 1px solid #305cde;}
+    </style>
 </head>
 <body>
-    <h1>What's an HTTP Server?</h1>
-    <p> Computer program that processes a server side application, making two-way or one-way connections and synchronous or asynchronous with the client and generating or giving a response in any language or application of the customer side.</p>
+    <h1 class="title">Sistema de Gestión de Tareas</h1>
+    <div class="container">
+        <div class="forms">
+            <h2>Crear Nueva Tarea (POST)</h2>
+            <form id="createForm">
+                <div class="inputs">
+                    <input type="text" id="createTitle" name="title" placeholder="Título de la tarea" required>
+                    <input type="text" id="createDescription" name="description" placeholder="Descripción">
+                </div>
+                <button type="submit">Crear Tarea</button>
+            </form>
+    
+            <h2>Obtener Tarea por ID (GET)</h2>
+            <form id="getForm">
+                <div class="inputs">
+                    <input type="number" id="getTaskId" name="id" placeholder="ID de la tarea" required>
+                </div>
+                <button type="submit">Obtener Tarea</button>
+            </form>
+    
+            <h2>Actualizar Tarea (PUT)</h2>
+            <form id="updateForm">
+                <div class="inputs">
+                    <input type="number" id="updateTaskId" name="id" placeholder="ID de la tarea" required>
+                    <input type="text" id="updateTitle" name="title" placeholder="Nuevo título">
+                    <input type="text" id="updateDescription" name="description" placeholder="Nueva descripción">
+                </div>
+                <button type="submit">Actualizar Tarea</button>
+            </form>
+    
+            <h2>Marcar Tarea como Completada (PATCH)</h2>
+            <form id="completeForm">
+                <div class="inputs">
+                    <input type="number" id="completeTaskId" name="id" placeholder="ID de la tarea" required>
+                </div>
+                <button type="submit">Marcar como Completada</button>
+            </form>
+    
+            <h2>Eliminar Tarea (DELETE)</h2>
+            <form id="deleteForm">
+                <div class="inputs">
+                    <input type="number" id="deleteTaskId" name="id" placeholder="ID de la tarea" required>
+                </div>
+                <button type="submit">Eliminar Tarea</button>
+            </form>
+        </div>
+        <div class="response">
+            <h2>Respuesta del Servidor:</h2>
+            <pre class="response__box" id="response"></pre>
+        </div>
+
+    </div>
+
+    <script>
+        const responseEl = document.getElementById('response');
+
+        async function sendRequest(url, method, body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: body ? new URLSearchParams(body).toString() : null
+            };
+
+            try {
+                const response = await fetch(url, options);
+                const data = await response.text();
+                responseEl.textContent = data;
+            } catch (error) {
+                responseEl.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        document.getElementById('createForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const title = document.getElementById('createTitle').value;
+            const description = document.getElementById('createDescription').value;
+            sendRequest('http://127.0.0.1:7878/tests', 'POST', { title, description });
+        });
+
+        document.getElementById('getForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const id = document.getElementById('getTaskId').value;
+            sendRequest(`http://127.0.0.1:7878/tests?id=${encodeURIComponent(id)}`, 'GET');
+        });
+
+        document.getElementById('updateForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const id = document.getElementById('updateTaskId').value;
+            const title = document.getElementById('updateTitle').value;
+            const description = document.getElementById('updateDescription').value;
+            sendRequest('http://127.0.0.1:7878/tests', 'PUT', { id, title, description });
+        });
+
+        document.getElementById('completeForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const id = document.getElementById('completeTaskId').value;
+            sendRequest('http://127.0.0.1:7878/tests', 'PATCH', { id, completed: true });
+        });
+
+        document.getElementById('deleteForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const id = document.getElementById('deleteTaskId').value;
+            sendRequest(`http://127.0.0.1:7878/tests?id=${encodeURIComponent(id)}`, 'DELETE');
+        });
+    </script>
 </body>
 </html>
