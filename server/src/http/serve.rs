@@ -4,6 +4,7 @@ use std::fmt;
 use std::io::BufReader;
 use std::net::{SocketAddr, TcpStream};
 use std::time::Instant;
+use std::collections::HashMap;
 
 /// Tipo que representa el resultado de aceptar una conexión TCP
 pub type StreamType = Result<(TcpStream, SocketAddr), std::io::Error>;
@@ -44,7 +45,25 @@ pub fn serve(thread_name: &str, router: &Router, stream: StreamType) -> Result<(
         .map_err(|e| ServeError::RequestRead(client_ip, e))?;
 
     // Maneja la request y obtiene la response
-    let res = router.handle_request(&req);
+    let mut res = router.handle_request(&req);
+
+    // Verificar si en los headers del request hay cookies
+    let cookies = req.headers.get("Cookie").map_or_else(|| "".to_string(), |v| v.clone());
+
+    // Parsear las cookies
+    let mut cookie_map = HashMap::new();
+    for cookie in cookies.split(';') {
+        let mut parts = cookie.split('=');
+        if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
+            cookie_map.insert(key.trim().to_string(), value.trim().to_string());
+        }
+    }
+
+    // If theres cookies, set them
+    if !cookie_map.is_empty() {
+        res.set_cookie(cookie_map);
+    }
+
 
     // Escribe la response al cliente
     res.write_to(&mut client)

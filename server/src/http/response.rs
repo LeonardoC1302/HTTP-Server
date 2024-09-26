@@ -2,6 +2,7 @@ use super::{mime_type, Headers, StatusCode, WriteTo};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::PathBuf;
+use std::collections::HashMap;
 
 /// Respuesta HTTP
 pub struct Response {
@@ -63,6 +64,19 @@ impl Response {
             headers: Headers::from(&vec![("Content-Type", mime_type(&path_buf))]),
             body,
         }
+    }
+
+    pub fn set_cookie(&mut self, cookies: HashMap<String, String>) {
+        let mut cookie_string = String::new();
+        for (key, value) in cookies {
+            if !cookie_string.is_empty() {
+                cookie_string.push_str("; "); // Separate multiple cookies with a semicolon
+            }
+            cookie_string.push_str(&format!("{}={}", key, value));
+        }
+        
+        // Store the concatenated cookie string in the Set-Cookie header
+        self.headers.insert("Set-Cookie".to_string(), cookie_string);
     }
 }
 
