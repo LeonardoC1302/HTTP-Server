@@ -130,20 +130,22 @@ mod tests {
         assert_eq!(headers.get("No_existe"), None);
     }
 
-    #[test]
-    // Prueba  iter ()
-    fn test_iter() {
-        // Prueba el método iter para iterar sobre los encabezados
-        let mut headers = Headers {
-            data: HeadersDataType::new(),
-        };
-        headers.insert("Key1".to_string(), "Value1".to_string());
-        headers.insert("Key2".to_string(), "Value2".to_string());
-        let mut iter = headers.iter();
-        assert!(iter.any(|(k, v)| k == "Key1" && v == "Value1"));
-        assert!(iter.any(|(k, v)| k == "Key2" && v == "Value2"));
-    }
+    // Prueba  iter (). Se asegura primero que hayan 2 elementos en el headers y luego verfica que sean los elementos esperados
 
+    #[test]
+    fn test_iter() {
+        let mut headers_data = HashMap::new();
+        headers_data.insert("Content-Type".to_string(), "application/json".to_string());
+        headers_data.insert("Authorization".to_string(), "Bearer token".to_string());
+
+        let headers = Headers { data: headers_data };
+
+        let collected: Vec<(&String, &String)> = headers.iter().collect();
+
+        assert_eq!(collected.len(), 2);
+        assert!(collected.contains(&(&"Content-Type".to_string(), &"application/json".to_string())));
+        assert!(collected.contains(&(&"Authorization".to_string(), &"Bearer token".to_string())));
+    }
     #[test]
     // Prueba  insert ()
     fn test_insert() {
