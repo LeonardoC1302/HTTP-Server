@@ -1,12 +1,12 @@
-use std::convert::From; 
+use std::convert::From;
 
-#[derive(Debug, PartialEq)] 
+#[derive(Debug, PartialEq)]
 pub enum Method {
     GET,
     POST,
     PUT,
     DELETE,
-    PATCH
+    PATCH,
 }
 
 impl From<&str> for Method {
@@ -25,5 +25,29 @@ impl From<&str> for Method {
                 Method::GET
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_methods() {
+        // Prueba la conversión de cadenas válidas a métodos HTTP
+        assert_eq!(Method::from("GET"), Method::GET);
+        assert_eq!(Method::from("POST"), Method::POST);
+        assert_eq!(Method::from("PUT"), Method::PUT);
+        assert_eq!(Method::from("DELETE"), Method::DELETE);
+        assert_eq!(Method::from("PATCH"), Method::PATCH);
+    }
+
+    #[test]
+    fn test_unrecognized_method() {
+        // Prueba el comportamiento con métodos no reconocidos
+        assert_eq!(Method::from("UNKNOWN"), Method::GET);
+        assert_eq!(Method::from("HEAD"), Method::GET);
+        assert_eq!(Method::from("OPTIONS"), Method::GET);
+        assert_eq!(Method::from(""), Method::GET);
     }
 }
