@@ -184,6 +184,7 @@ pub fn set_cookie(&mut self, cookies: HashMap<String, String>) {
 }
 ```
 The set_cookie method adds the cookies to the Set-Cookie header of the response, which instructs the client (browser) to store these cookies.
+
 ## Project Testing
 ### Unit Testing
 Unit tests have been implemented for the HTTP server using Rust's built-in testing framework. These tests ensure the correct functionality of various server components and endpoints. To run the test suite, simply execute the command cargo test in the `server` directory. This will compile the code and run all defined tests, providing a summary of the results.
@@ -191,10 +192,18 @@ Unit tests have been implemented for the HTTP server using Rust's built-in testi
 A Python script was created ([test_request](./test_request.py)) to perform a concurrency test by sending multiple simultaneous GET requests to the HTTP server using threads. This test simulates concurrent client interactions, enabling an evaluation of the server's ability to manage multiple connections in parallel. By increasing the number of threads, the test can also serve as a stress test, pushing the server to its performance limits. The results provide valuable insights into potential bottlenecks, response latency, and overall server stability under high traffic conditions.
 
 Postman was also used to test the endpoints for both functional and performance evaluation by sending multiple requests. To run the collection for testing, simply import the provided Postman collection ([postman-collection](./postman-collection.json)), select the desired environment and use the "Run Colection" option to execute multiple iterations of the requests for performance testing or single runs for functional testing. You can also configure delays between requests and set the number of iterations to simulate different load conditions.
-## How to run the server?
+
+## User Manual
+### How to run the server?
 To run the server follow this steps:
 - Clone the github repository or download the compressed version.
 - Make sure you have rust installed on your device. You can install it from here: [Install Rust](https://www.rust-lang.org/tools/install)
 - Head to the `server` directory, since that folder contains all the files from the HTTP Server.
 - Run `cargo r <port> <no_threads>` to compile and execute the server. Its recommended to use port 7878.
 - Open `localhost:port` on your preferred browser. You can visit the following routes: '/', '/index.html', '/login'.
+
+### Specific uses
+- when running the server in your browser, fill the wanted input boxes and press the button to create the requests. On the top right the server response is shown. 
+- The login page lets the user insert a email and a password, after pressing "Cerrar Sesion" the server will show the active sesion. To try again press "Cerrar Sesion"
+
+- On the terminal, the used threads and request types are shown along with the response time.
