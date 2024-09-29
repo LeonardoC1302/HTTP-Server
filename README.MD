@@ -195,10 +195,11 @@ A Python script was created ([test_request](./test_request.py)) to perform a con
 
 Postman was also used to test the endpoints for both functional and performance evaluation by sending multiple requests. To run the collection for testing, simply import the provided Postman collection ([postman-collection](./postman-collection.json)), select the desired environment and use the "Run Colection" option to execute multiple iterations of the requests for performance testing or single runs for functional testing. You can also configure delays between requests and set the number of iterations to simulate different load conditions.
 
-## User Manual
-### How to run the server?
 ![Functional Test](./assets/postman_functional.png)
 ![Performance Test](./assets/postman_performance.png)
+
+## User Manual
+### How to run the server?
 
 ## How to run the server?
 To run the server follow this steps:
@@ -209,7 +210,8 @@ To run the server follow this steps:
 - Open `localhost:port` on your preferred browser. You can visit the following routes: '/', '/index.html', '/login'.
 
 ### Specific uses
-- when running the server in your browser, fill the wanted input boxes and press the button to create the requests. On the top right the server response is shown. 
-- The login page lets the user insert a email and a password, after pressing "Cerrar Sesion" the server will show the active sesion. To try again press "Cerrar Sesion"
+- When running the server in your browser, fill the wanted input boxes and press the button to create the requests. On the top right the server response is shown. This applies for the `/` route.
+
+- The login page lets the user insert a email and a password, after pressing "Iniciar Sesión" the server will show the active sesion. To try again press "Cerrar Sesion", this will delete the session cookies.
 
 - On the terminal, the used threads and request types are shown along with the response time.
