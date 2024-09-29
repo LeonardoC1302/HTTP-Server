@@ -1,5 +1,5 @@
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum StatusCode {
     OK = 200,
     REDIRECT = 301,

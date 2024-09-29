@@ -1,4 +1,4 @@
-use super::{Request, Response};
+use super::{Headers, Request, Response, StatusCode};
 use std::collections::HashMap;
 
 /// Tipo que representa una función de callback para manejar requests
@@ -49,5 +49,64 @@ impl Router {
     pub fn insert_file(&mut self, pat: &str, fname: &str) {
         self.handlers
             .insert(pat.to_string(), Handler::File(fname.to_string()));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::{Headers, Request, Response, Router, StatusCode};
+
+    #[test]
+    // Prueba de router con archivo
+    fn test_router_with_callback() {
+        let mut router = Router::new();
+
+        fn simple_callback(_req: &Request) -> Response {
+            Response::ok("Callback response")
+        }
+
+        router.insert_callback("/test", simple_callback);
+
+        let vec = vec![
+            ("Content-Type", "application/json"),
+            ("Authorization", "Bearer token"),
+        ];
+        let headers = Headers::from(&vec);
+
+        let request: Request = Request {
+            method: "GET".into(),
+            path: "/test".into(),
+            headers: headers,
+            body: String::new(),
+        };
+
+        let response = router.handle_request(&request);
+
+        assert_eq!(String::from_utf8_lossy(&response.body), "Callback response");
+        assert_eq!(response.status, StatusCode::OK);
+    }
+
+    #[test]
+    // Prueba de router con archivo
+    fn test_router_not_found() {
+        let router = Router::new();
+
+        let vec = vec![
+            ("Content-Type", "application/json"),
+            ("Authorization", "Bearer token"),
+        ];
+        let headers = Headers::from(&vec);
+
+        let request: Request = Request {
+            method: "GET".into(),
+            path: "/test".into(),
+            headers: headers,
+            body: String::new(),
+        };
+
+        let response = router.handle_request(&request);
+
+        assert_eq!(response.status, StatusCode::NOTFOUND);
     }
 }

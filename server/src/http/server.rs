@@ -1,10 +1,11 @@
 use super::{serve, Callback, Router, StreamType};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener};
-use std::sync::{mpsc, Arc, Mutex};
-use std::thread;
 use std::panic;
 use std::process;
+use std::sync::{mpsc, Arc, Mutex};
+use std::thread;
 
+#[derive(Clone)]
 /// Representa un servidor HTTP
 pub struct Server {
     addr: SocketAddr,
@@ -32,11 +33,14 @@ impl Server {
             orig_hook(panic_info);
             process::exit(-1);
         }));
-        
+
         // Crea el listener TCP y lo envuelve en un Arc<Mutex>
         let listener = Arc::new(Mutex::new(TcpListener::bind(self.addr).unwrap()));
         let router = Arc::new(self.router.clone());
-        println!("Listening on http://{} with {} threads.", self.addr, no_threads);
+        println!(
+            "Listening on http://{} with {} threads.",
+            self.addr, no_threads
+        );
 
         let mut children = Vec::with_capacity(no_threads);
         let (tx, rx) = mpsc::channel();
@@ -84,3 +88,4 @@ impl Server {
         self.router.insert_file(pat, fname);
     }
 }
+

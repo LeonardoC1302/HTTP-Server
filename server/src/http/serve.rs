@@ -84,3 +84,4 @@ pub fn serve(thread_name: &str, router: &Router, stream: StreamType) -> Result<(
     );
     Ok(())
 }
+
