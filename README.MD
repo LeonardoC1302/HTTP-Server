@@ -191,10 +191,16 @@ Unit tests have been implemented for the HTTP server using Rust's built-in testi
 ### Other Tests
 A Python script was created ([test_request](./test_request.py)) to perform a concurrency test by sending multiple simultaneous GET requests to the HTTP server using threads. This test simulates concurrent client interactions, enabling an evaluation of the server's ability to manage multiple connections in parallel. By increasing the number of threads, the test can also serve as a stress test, pushing the server to its performance limits. The results provide valuable insights into potential bottlenecks, response latency, and overall server stability under high traffic conditions.
 
+![Stress Test](./assets/python_stress.png)
+
 Postman was also used to test the endpoints for both functional and performance evaluation by sending multiple requests. To run the collection for testing, simply import the provided Postman collection ([postman-collection](./postman-collection.json)), select the desired environment and use the "Run Colection" option to execute multiple iterations of the requests for performance testing or single runs for functional testing. You can also configure delays between requests and set the number of iterations to simulate different load conditions.
 
 ## User Manual
 ### How to run the server?
+![Functional Test](./assets/postman_functional.png)
+![Performance Test](./assets/postman_performance.png)
+
+## How to run the server?
 To run the server follow this steps:
 - Clone the github repository or download the compressed version.
 - Make sure you have rust installed on your device. You can install it from here: [Install Rust](https://www.rust-lang.org/tools/install)
