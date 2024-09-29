@@ -95,6 +95,8 @@ mod tests {
     use super::*;
     use std::sync::Arc;
 
+    // un mock para el serve que no necesita una conexión TCP
+    
     pub fn mock_serve(
         router: &Router,
         request: Request,

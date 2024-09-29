@@ -50,6 +50,18 @@ impl Router {
         self.handlers
             .insert(pat.to_string(), Handler::File(fname.to_string()));
     }
+
+    // Verifica si una ruta tiene un manejador asociado
+    // se usa en las pruebas de server
+    pub fn has_route(&self, path: &str) -> bool {
+        self.handlers.contains_key(path)
+    }
+    // Devuelve la cantidad de rutas manejadas
+    // se usa en las pruebas de server
+
+    pub fn route_count(&self) -> usize {
+        self.handlers.len()
+    }
 }
 
 #[cfg(test)]

@@ -1,4 +1,4 @@
-use super::{serve, Callback, Router, StreamType};
+use super::{serve, Callback, Response, Router, StreamType};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener};
 use std::panic;
 use std::process;
@@ -89,3 +89,51 @@ impl Server {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::SocketAddr;
+
+    #[test]
+    // prueba de creación de un servidor
+    fn test_server_new() {
+        let server = Server::new("127.0.0.1", "8080");
+        assert_eq!(
+            server.addr,
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080)
+        );
+    }
+
+    #[test]
+    // prueba de registro de un callback
+    fn test_server_on() {
+        let mut server = Server::new("127.0.0.1", "8080");
+        assert_eq!(server.router.route_count(), 0);
+        server.on("/test", |_req| Response::ok("Test response"));
+        assert_eq!(server.router.route_count(), 1);
+        assert!(server.router.has_route("/test"));
+    }
+
+    #[test]
+    // prueba de registro de un archivo
+    fn test_server_on_file() {
+        let mut server = Server::new("127.0.0.1", "8080");
+
+        // deberia estar en 0 pq no hay archivs registrados
+        assert_eq!(server.router.route_count(), 0);
+        assert!(!server.router.has_route("/test"));
+
+        server.on_file("/test", "test.html");
+
+        // deberia estar en 1 pq hay un archivo registrado
+        assert_eq!(server.router.route_count(), 1);
+        assert!(server.router.has_route("/test"));
+
+        server.on_file("/another", "another.html");
+
+        // deberia estar en 2 pq hay dos archivos registrados
+        assert_eq!(server.router.route_count(), 2);
+        assert!(server.router.has_route("/test"));
+        assert!(server.router.has_route("/another"));
+    }
+}
