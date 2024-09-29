@@ -199,8 +199,6 @@ Postman was also used to test the endpoints for both functional and performance 
 ![Performance Test](./assets/postman_performance.png)
 
 ## User Manual
-### How to run the server?
-
 ## How to run the server?
 To run the server follow this steps:
 - Clone the github repository or download the compressed version.
