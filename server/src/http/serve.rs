@@ -45,8 +45,6 @@ pub fn serve(thread_name: &str, router: &Router, stream: StreamType) -> Result<(
     // Lee y parsea la request
     let req = Request::read_from(&mut reader).map_err(|e| ServeError::RequestRead(client_ip, e))?;
 
-    println!("---Req:{:?}", req);
-
     // Maneja la request y obtiene la response
     let mut res = router.handle_request(&req);
 
@@ -70,8 +68,6 @@ pub fn serve(thread_name: &str, router: &Router, stream: StreamType) -> Result<(
         res.set_cookie(cookie_map);
     }
 
-    println!("---Res:{:?}", res);
-
     // Escribe la response al cliente
     res.write_to(&mut client)
         .map_err(|e| ServeError::ResponseRead(client_ip, e))?;
@@ -92,24 +88,17 @@ pub fn serve(thread_name: &str, router: &Router, stream: StreamType) -> Result<(
     Ok(())
 }
 
+// UNIT TESTS
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::{Read, Write};
-    use std::net::{TcpListener, TcpStream};
-    use std::sync::{Arc, Mutex};
-    use std::thread;
+    use std::sync::Arc;
 
     pub fn mock_serve(
-        thread_name: &str,
         router: &Router,
         request: Request,
     ) -> Result<Response, ServeError> {
-        let start = Instant::now();
-
-        // Simulate getting client IP for logging purposes
-        let client_ip = "127.0.0.1"; // Hard-coded for mock purposes
-
         // Handle the request and get the response
         let mut res = router.handle_request(&request);
 
@@ -133,26 +122,9 @@ mod tests {
             res.set_cookie(cookie_map);
         }
 
-        let duration = start.elapsed();
-
-        // Print log information about the processed request
-        println!(
-            "#{} [{}] {{{}}} {:?} '{}' -> {} {:.2}ms",
-            thread_name,
-            client_ip,
-            request
-                .headers
-                .user_agent()
-                .unwrap_or(&String::from("None")),
-            request.method,
-            request.path,
-            res.status as usize,
-            duration.as_nanos() as f64 / 1e+6
-        );
-
         Ok(res)
     }
-    /*
+
     #[test]
     fn test_serve() {
         // Simula un router sencillo
@@ -163,104 +135,27 @@ mod tests {
         router.insert_callback("/test", simple_callback);
 
         // Crea un servidor TCP local para la prueba
-        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-        let addr = listener.local_addr().unwrap();
         let router = Arc::new(router);
 
-        // Crea un thread para aceptar una conexión y enviar una request
-        let server_thread = thread::spawn(move || {
-            if let Ok((mut stream, _)) = listener.accept() {
-                // Simula una request HTTP que el servidor recibirá
-                let request = b"GET /test HTTP/1.1\r\n\
-                                Host: localhost\r\n\
-                                User-Agent: test-client\r\n\
-                                Cookie: testcookie=testvalue\r\n\
-                                \r\n";
+        // Prepara la request
+        let vec = vec![
+            ("Content-Type", "application/json"),
+            ("Authorization", "Bearer token"),
+        ];
+        let headers = Headers::from(&vec);
 
-                // Envía la request al servidor
-                stream.write_all(request).unwrap();
-
-                // Lee la respuesta
-                let mut buffer = [0; 512];
-                let _ = stream.read(&mut buffer).unwrap();
-            }
-        });
+        let request: Request = Request {
+            method: "GET".into(),
+            path: "/test".into(),
+            headers: headers,
+            body: String::new(),
+        };
 
         // Simula una conexión cliente para la función serve
-        let stream = TcpStream::connect(addr).unwrap();
-        let stream_type: StreamType = Ok((stream.try_clone().unwrap(), addr));
-
-        // Llamamos a la función serve con el router simulado y el stream
-        let result = serve("test-thread", &router, stream_type);
-        println!("ERROR:::{:?}", result); // Imprime el resultado
+        let result = mock_serve(&router, request);
 
         // Verificamos que no ocurrieron errores en el servicio
         assert!(result.is_ok());
-
-        // Esperamos que el servidor termine de procesar
-        server_thread.join().unwrap();
-    }*/
-
-    #[test]
-fn test_serve() {
-    // Simula un router sencillo
-    let mut router = Router::new();
-    fn simple_callback(_req: &Request) -> Response {
-        Response::ok("Test response")
     }
-    router.insert_callback("/test", simple_callback);
-
-    // Crea un servidor TCP local para la prueba
-    let listener = Arc::new(Mutex::new(TcpListener::bind("127.0.0.1:0").unwrap()));
-    let addr = listener.lock().unwrap().local_addr().unwrap();
-    let router = Arc::new(router);
-
-    // Crea un thread para aceptar una conexión y enviar una request
-    let server_thread = {
-        let listener = Arc::clone(&listener);
-        let router = Arc::clone(&router);
-        thread::spawn(move || {
-            if let Ok((mut stream, _)) = listener.lock().unwrap().accept() {
-                // Simula una request HTTP que el servidor recibirá
-                let request = b"GET /test HTTP/1.1\r\n\
-                                Host: localhost\r\n\
-                                User-Agent: test-client\r\n\
-                                Cookie: testcookie=testvalue\r\n\
-                                \r\n";
-
-                // Envía la request al servidor
-                stream.write_all(request).unwrap();
-                
-                // Lee la respuesta
-                let mut buffer = [0; 512];
-                let _ = stream.read(&mut buffer).unwrap();
-            }
-        })
-    };
-
-    // Prepara la request
-    let vec = vec![
-        ("Content-Type", "application/json"),
-        ("Authorization", "Bearer token"),
-    ];
-    let headers = Headers::from(&vec);
-
-    let request: Request = Request {
-        method: "GET".into(),
-        path: "/test".into(),
-        headers: headers,
-        body: String::new(),
-    };
-
-    // Simula una conexión cliente para la función serve
-    let result = mock_serve("test-thread", &router, request);
-    println!("ERROR:::{:?}", result); // Imprime el resultado
-
-    // Verificamos que no ocurrieron errores en el servicio
-    assert!(result.is_ok());
-
-    // Esperamos que el servidor termine de procesar
-    server_thread.join().unwrap();
-}
 
 }
