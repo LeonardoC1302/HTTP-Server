@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::convert::{From, TryFrom};
-use std::iter::Iterator;
 use std::fmt;
+use std::iter::Iterator;
 use std::str::Split;
 
 // Tipo de dato para simplificar la declaración del HashMap
@@ -61,17 +61,17 @@ impl TryFrom<&mut Split<'_, char>> for Headers {
         // Iteramos por cada línea y la convertimos en clave-valor
         for line in str_iter {
             if line.trim().is_empty() {
-                break;  // Terminamos si la línea está vacía
+                break; // Terminamos si la línea está vacía
             }
 
             // Usamos el nuevo método `parse_header_line` para obtener clave y valor
             match Headers::parse_header_line(line) {
                 Ok((key, value)) => headers.insert(key, value),
-                Err(e) => return Err(e),  // Retornamos error si no se pudo parsear
+                Err(e) => return Err(e), // Retornamos error si no se pudo parsear
             }
         }
 
-        Ok(headers)  // Retornamos la instancia de `Headers` creada
+        Ok(headers) // Retornamos la instancia de `Headers` creada
     }
 }
 
@@ -87,7 +87,7 @@ impl From<&Vec<(&str, &str)>> for Headers {
             headers.insert(key.to_string(), value.to_string());
         }
 
-        headers  // Retornamos la instancia de `Headers` creada
+        headers // Retornamos la instancia de `Headers` creada
     }
 }
 
@@ -95,5 +95,114 @@ impl From<&Vec<(&str, &str)>> for Headers {
 impl fmt::Debug for Headers {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_map().entries(self.data.iter()).finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    // Prueba  user_agent ()
+    fn test_user_agent() {
+        let mut headers_data = HashMap::new();
+        headers_data.insert("User-Agent".to_string(), "Prueba".to_string());
+        let headers = Headers { data: headers_data };
+
+        assert_eq!(headers.user_agent(), Some(&"Prueba".to_string()));
+    }
+
+    #[test]
+    // Prueba get () . Se espera que devuelva el valor de la clave dada
+    //donde el valor de Content-Type debe ser igual a application/json
+    // y el valor de Nonexistent no debe existir
+
+    fn test_get() {
+        let mut headers = Headers {
+            data: HeadersDataType::new(),
+        };
+        headers.insert("Content-Type".to_string(), "application/json".to_string());
+        assert_eq!(
+            headers.get("Content-Type"),
+            Some(&"application/json".to_string())
+        );
+        assert_eq!(headers.get("No_existe"), None);
+    }
+
+    // Prueba  iter (). Se asegura primero que hayan 2 elementos en el headers y luego verfica que sean los elementos esperados
+
+    #[test]
+    fn test_iter() {
+        let mut headers_data = HashMap::new();
+        headers_data.insert("Content-Type".to_string(), "application/json".to_string());
+        headers_data.insert("Authorization".to_string(), "Bearer token".to_string());
+
+        let headers = Headers { data: headers_data };
+
+        let collected: Vec<(&String, &String)> = headers.iter().collect();
+
+        assert_eq!(collected.len(), 2);
+        assert!(collected.contains(&(&"Content-Type".to_string(), &"application/json".to_string())));
+        assert!(collected.contains(&(&"Authorization".to_string(), &"Bearer token".to_string())));
+    }
+    #[test]
+    // Prueba  insert ()
+    fn test_insert() {
+        let mut headers = Headers {
+            data: HeadersDataType::new(),
+        };
+        headers.insert("key".to_string(), "val".to_string());
+        assert_eq!(headers.get("key"), Some(&"val".to_string()));
+    }
+    #[test]
+    // Prueba parse_header_line con 1 entrada válidas e 2 inválidas
+    fn test_parse_header_line() {
+        assert_eq!(
+            Headers::parse_header_line("Content-Type: application/json"),
+            Ok(("Content-Type".to_string(), "application/json".to_string()))
+        );
+        assert_eq!(
+            Headers::parse_header_line("No_existe"),
+            Err("Invalid header, no ': ' found")
+        );
+        assert_eq!(
+            Headers::parse_header_line(": No Key"),
+            Err("Invalid header")
+        );
+    }
+
+    #[test]
+    // Prueba try_from_split para crear Headers desde un Split
+    fn test_try_from_split() {
+        let mut split = "Host: example.com\nUser-Agent: app/5.0\n\n".split('\n');
+        let headers = Headers::try_from(&mut split).unwrap();
+        assert_eq!(headers.get("Host"), Some(&"example.com".to_string()));
+        assert_eq!(headers.get("User-Agent"), Some(&"app/5.0".to_string()));
+    }
+
+    #[test]
+    // Prueba el caso de error de TryFrom
+    fn test_try_from_split_error() {
+        let mut split = "Invalid\n".split('\n');
+        assert!(Headers::try_from(&mut split).is_err());
+    }
+
+    #[test]
+    // Prueba From para crear Headers desde un vector de tuplas
+    fn test_from_vec() {
+        let vec = vec![
+            ("Content-Type", "application/json"),
+            ("Authorization", "Bearer token"),
+        ];
+        let headers = Headers::from(&vec);
+        assert_eq!(
+            headers.get("Content-Type"),
+            Some(&"application/json".to_string())
+        );
+        assert_eq!(
+            headers.get("Authorization"),
+            Some(&"Bearer token".to_string())
+        );
     }
 }

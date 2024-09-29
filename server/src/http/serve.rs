@@ -1,4 +1,5 @@
-use super::{ReadFrom, Request, Router, WriteTo};
+use super::{Headers, ReadFrom, Request, Response, Router, WriteTo};
+use std::collections::HashMap;
 use std::convert::From;
 use std::fmt;
 use std::io::BufReader;
@@ -9,6 +10,8 @@ use std::time::Instant;
 pub type StreamType = Result<(TcpStream, SocketAddr), std::io::Error>;
 
 /// Enum que representa los posibles errores durante el servicio de una request
+#[derive(Debug)]
+
 pub enum ServeError {
     StartConnection,
     RequestRead(SocketAddr, &'static str),
@@ -40,11 +43,30 @@ pub fn serve(thread_name: &str, router: &Router, stream: StreamType) -> Result<(
     let mut reader = BufReader::with_capacity(4000, &mut client);
 
     // Lee y parsea la request
-    let req = Request::read_from(&mut reader)
-        .map_err(|e| ServeError::RequestRead(client_ip, e))?;
+    let req = Request::read_from(&mut reader).map_err(|e| ServeError::RequestRead(client_ip, e))?;
 
     // Maneja la request y obtiene la response
-    let res = router.handle_request(&req);
+    let mut res = router.handle_request(&req);
+
+    // Verificar si en los headers del request hay cookies
+    let cookies = req
+        .headers
+        .get("Cookie")
+        .map_or_else(|| "".to_string(), |v| v.clone());
+
+    // Parsear las cookies
+    let mut cookie_map = HashMap::new();
+    for cookie in cookies.split(';') {
+        let mut parts = cookie.split('=');
+        if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
+            cookie_map.insert(key.trim().to_string(), value.trim().to_string());
+        }
+    }
+
+    // If theres cookies, set them
+    if !cookie_map.is_empty() {
+        res.set_cookie(cookie_map);
+    }
 
     // Escribe la response al cliente
     res.write_to(&mut client)
@@ -64,4 +86,78 @@ pub fn serve(thread_name: &str, router: &Router, stream: StreamType) -> Result<(
         duration.as_nanos() as f64 / 1e+6
     );
     Ok(())
+}
+
+// UNIT TESTS
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Arc;
+
+    // un mock para el serve que no necesita una conexión TCP
+    
+    pub fn mock_serve(
+        router: &Router,
+        request: Request,
+    ) -> Result<Response, ServeError> {
+        // Handle the request and get the response
+        let mut res = router.handle_request(&request);
+
+        // Check if the headers in the request contain cookies
+        let cookies = request
+            .headers
+            .get("Cookie")
+            .map_or_else(|| "".to_string(), |v| v.clone());
+
+        // Parse the cookies
+        let mut cookie_map = HashMap::new();
+        for cookie in cookies.split(';') {
+            let mut parts = cookie.split('=');
+            if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
+                cookie_map.insert(key.trim().to_string(), value.trim().to_string());
+            }
+        }
+
+        // If there are cookies, set them in the response
+        if !cookie_map.is_empty() {
+            res.set_cookie(cookie_map);
+        }
+
+        Ok(res)
+    }
+
+    #[test]
+    fn test_serve() {
+        // Simula un router sencillo
+        let mut router = Router::new();
+        fn simple_callback(_req: &Request) -> Response {
+            Response::ok("Test response")
+        }
+        router.insert_callback("/test", simple_callback);
+
+        // Crea un servidor TCP local para la prueba
+        let router = Arc::new(router);
+
+        // Prepara la request
+        let vec = vec![
+            ("Content-Type", "application/json"),
+            ("Authorization", "Bearer token"),
+        ];
+        let headers = Headers::from(&vec);
+
+        let request: Request = Request {
+            method: "GET".into(),
+            path: "/test".into(),
+            headers: headers,
+            body: String::new(),
+        };
+
+        // Simula una conexión cliente para la función serve
+        let result = mock_serve(&router, request);
+
+        // Verificamos que no ocurrieron errores en el servicio
+        assert!(result.is_ok());
+    }
+
 }
