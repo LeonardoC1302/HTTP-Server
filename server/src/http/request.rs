@@ -3,6 +3,8 @@ use std::convert::TryFrom;
 use std::io::BufRead;
 
 /// Solicitud HTTP
+#[derive(Debug)]
+
 pub struct Request {
     pub method: Method,
     pub path: Path,

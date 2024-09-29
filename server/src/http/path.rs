@@ -4,6 +4,8 @@ use std::convert::From;
 use std::fmt;
 
 // Estructura que representa un Path (ruta principal y parámetros)
+#[derive(Debug)]
+
 pub struct Path {
     data: String,
     params: Option<String>,

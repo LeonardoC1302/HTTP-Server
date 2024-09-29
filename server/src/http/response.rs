@@ -5,6 +5,8 @@ use std::io::{Read, Write};
 use std::path::PathBuf;
 
 /// Respuesta HTTP
+#[derive(Debug)]
+
 pub struct Response {
     pub status: StatusCode,
     pub headers: Headers,
@@ -86,6 +88,7 @@ impl WriteTo for Response {
     /// Escribe la respuesta HTTP en el stream proporcionado
     fn write_to<W: Write>(&self, stream: &mut W) -> Result<(), Self::Error> {
         // Escribe la línea de estado
+        println!("Status: {:?}", self.status);
         stream
             .write_fmt(format_args!("HTTP/1.1 {}\n", self.status as u32))
             .or(Err("Failed sending status code"))?;
