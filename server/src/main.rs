@@ -16,35 +16,29 @@ fn main() {
     server.on(r"/", |_| Response::redirect("/index.html"));
 
     // Simulamos una página de login
-    server.on(r"/login", |req| {
-        // Solo aceptamos solicitudes GET y POST
-        if req.method != Method::GET && req.method != Method::POST {
-            return Response::internal_err("Only get or post requests are allowed");
+    server.on_file(r"/login", "./static/login.html");
+
+    // Simulamos el API de login
+    server.on(r"/api/login", |req| {
+        // Solo aceptamos solicitudes POST
+        if req.method != Method::POST {
+            return Response::internal_err("Only post requests are allowed");
         }
     
-        // Parsear los parámetros de la URL (para GET)
-        let mut query = match req.path.parse_params() {
-            Ok(q) => q,
-            Err(_) => return Response::internal_err("Couldn't parse query parameters"),
-        };
-    
-        // Parsear los parámetros del cuerpo de la solicitud (para POST)
+        // Parsear los parámetros del cuerpo de la solicitud
         let body = match parse_url_param(&req.body) {
             Ok(b) => b,
             Err(_) => return Response::internal_err("Couldn't parse body parameters"),
         };
     
-        // Mezclar los parámetros de la URL y del cuerpo
-        query.extend(body);
-    
         // Obtener el valor del campo 'email'
-        let email = match query.get("email") {
+        let email = match body.get("email") {
             Some(v) => v,
             None => return Response::internal_err("Missing email"),
         };
     
         // Obtener el valor del campo 'password'
-        let password = match query.get("password") {
+        let password = match body.get("password") {
             Some(v) => v,
             None => return Response::internal_err("Missing password"),
         };
@@ -52,9 +46,10 @@ fn main() {
         // Crear una respuesta con los valores de email y password
         let response = format!("Email: {}, Password: {}\n", email, password);
         Response::ok(&response)
-    });    
-
-    server.on(r"/tests", |req| {
+    });
+    
+    // Simulamos una API de pruebas
+    server.on(r"/api/tests", |req| {
         // Parsear los parámetros de la URL
         let mut query = match req.path.parse_params() {
             Ok(q) => q,

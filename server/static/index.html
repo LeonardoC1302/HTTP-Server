@@ -98,13 +98,13 @@
             event.preventDefault();
             const title = document.getElementById('createTitle').value;
             const description = document.getElementById('createDescription').value;
-            sendRequest('http://127.0.0.1:7878/tests', 'POST', { title, description });
+            sendRequest('http://127.0.0.1:7878/api/tests', 'POST', { title, description });
         });
 
         document.getElementById('getForm').addEventListener('submit', (event) => {
             event.preventDefault();
             const id = document.getElementById('getTaskId').value;
-            sendRequest(`http://127.0.0.1:7878/tests?id=${encodeURIComponent(id)}`, 'GET');
+            sendRequest(`http://127.0.0.1:7878/api/tests?id=${encodeURIComponent(id)}`, 'GET');
         });
 
         document.getElementById('updateForm').addEventListener('submit', (event) => {
@@ -112,19 +112,19 @@
             const id = document.getElementById('updateTaskId').value;
             const title = document.getElementById('updateTitle').value;
             const description = document.getElementById('updateDescription').value;
-            sendRequest('http://127.0.0.1:7878/tests', 'PUT', { id, title, description });
+            sendRequest('http://127.0.0.1:7878/api/tests', 'PUT', { id, title, description });
         });
 
         document.getElementById('completeForm').addEventListener('submit', (event) => {
             event.preventDefault();
             const id = document.getElementById('completeTaskId').value;
-            sendRequest('http://127.0.0.1:7878/tests', 'PATCH', { id, completed: true });
+            sendRequest('http://127.0.0.1:7878/api/tests', 'PATCH', { id, completed: true });
         });
 
         document.getElementById('deleteForm').addEventListener('submit', (event) => {
             event.preventDefault();
             const id = document.getElementById('deleteTaskId').value;
-            sendRequest(`http://127.0.0.1:7878/tests?id=${encodeURIComponent(id)}`, 'DELETE');
+            sendRequest(`http://127.0.0.1:7878/api/tests?id=${encodeURIComponent(id)}`, 'DELETE');
         });
     </script>
 </body>

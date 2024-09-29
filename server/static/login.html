@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; background-color: #f4f4f4; }
+        .container { max-width: 400px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        form { display: flex; flex-direction: column; }
+        input[type="email"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px; background-color: #305cde; color: white; border: none; cursor: pointer; border-radius: 4px; margin-bottom: 10px; }
+        button:hover { background-color: #2151df; }
+        #response { background-color: #f1f1f1; padding: 10px; border-radius: 4px; margin-top: 20px; }
+        #logoutButton { display: none; background-color: #dc3545; width: 100%;}
+        #logoutButton:hover { background-color: #c82333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <input type="email" id="email" name="email" placeholder="Correo electrónico" required>
+            <input type="password" id="password" name="password" placeholder="Contraseña" required>
+            <button type="submit">Iniciar sesión</button>
+        </form>
+        <button id="logoutButton">Cerrar sesión</button>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function deleteCookie(name) {
+            document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const session_id = Math.random().toString(36).substr(2);
+            setCookie('session_id', session_id, 1);
+
+            try {
+                const response = await fetch('http://127.0.0.1:7878/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Session-Token': session_id
+                    },
+                    body: new URLSearchParams({ email, password }).toString()
+                });
+                
+                const data = await response.text();
+                document.getElementById('response').textContent = data;
+                checkSession();
+            } catch (error) {
+                document.getElementById('response').textContent = `Error: ${error.message}`;
+            }
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            try {
+                const session_id = getCookie('session_id');
+                const response = await fetch('http://127.0.0.1:7878/api/logout', {
+                    method: 'POST',
+                    headers: {
+                        'X-Session-Token': session_id
+                    }
+                });
+                
+                const data = await response.text();
+                deleteCookie('session_id');
+                document.getElementById('response').textContent = data;
+                checkSession();
+            } catch (error) {
+                document.getElementById('response').textContent = `Error: ${error.message}`;
+            }
+        });
+
+        function checkSession() {
+            const session_id = getCookie('session_id');
+            const loginForm = document.getElementById('loginForm');
+            const logoutButton = document.getElementById('logoutButton');
+            
+            if (session_id) {
+                loginForm.style.display = 'none';
+                logoutButton.style.display = 'block';
+                document.getElementById('response').textContent = "Sesión activa detectada. Token: " + session_id;
+            } else {
+                loginForm.style.display = 'flex';
+                logoutButton.style.display = 'none';
+                document.getElementById('response').textContent = "";
+            }
+        }
+
+        window.onload = checkSession;
+    </script>
+</body>
+</html>

@@ -4,16 +4,16 @@ import threading
 #Get requests
 def test_get_request(ip_address, port, request_id, id):
     try:
-        full_url = f"http://{ip_address}:{port}/tests?id={id}"
+        full_url = f"http://{ip_address}:{port}/api/tests?id={id}"
         
         response = requests.get(full_url)
         
         if response.status_code == 200:
-            print(f"Thread ID {request_id}: Request successful!")
-            print(f"Thread ID {request_id}: Response Code: {response.status_code}")
-            print(f"Thread ID {request_id}: Response Content: \n{response.text}")
+            print(f"Request ID {request_id}: Request successful!")
+            print(f"Request ID {request_id}: Response Code: {response.status_code}")
+            print(f"Request ID {request_id}: Response Content: \n{response.text}")
         else:
-            print(f"Thread ID {request_id}: Failed. HTTP Status Code: {response.status_code}")
+            print(f"Request ID {request_id}: Failed. HTTP Status Code: {response.status_code}")
     
     except requests.exceptions.RequestException as e:
         print(f"Thread ID {request_id}: An error occurred: {e}")
