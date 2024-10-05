@@ -198,6 +198,10 @@ Postman was also used to test the endpoints for both functional and performance 
 ![Functional Test](./assets/postman_functional.png)
 ![Performance Test](./assets/postman_performance.png)
 
+### Coverage
+The library `cargo-llvm-cov` was used to measure the coverage percentage of the unit tests. 
+![coverage_evidence](./assets/coverage.jpg)
+
 ## User Manual
 ## How to run the server?
 To run the server follow this steps:
